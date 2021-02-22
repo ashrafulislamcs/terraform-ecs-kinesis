@@ -35,13 +35,15 @@ class Client {
   }
 
   get interface() {
+    const self = this;
+
     return {
       initialize(initializeInput, done) {
         // Any other init logic in here before KCL kicks in...
 
         console.log('Starting KCL record processor...');
 
-        this.init();
+        self.init();
         done();
       },
       shutdown() {
@@ -55,15 +57,15 @@ class Client {
     
         const { records } = processRecordsInput;
 
-        if (!sequenceNumber) {
-          // Must call completeCallback to proceed further.
-          return done();
-        }
-
         _.each(records, (record) => {
           const { sequenceNumber, partitionKey } = record;
 
-          this.push({
+          if (!sequenceNumber) {
+            // Must call completeCallback to proceed further.
+            return done();
+          }
+
+          self.push({
             done,
             partitionKey,
             sequenceNumber,
