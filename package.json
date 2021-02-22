@@ -1,0 +1,27 @@
+{
+  "name": "kcl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon ./src/index.js",
+    "start": "node ./src/index.js"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brodeynewman/terraform-ecs-kinesis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/brodeynewman/terraform-ecs-kinesis/issues"
+  },
+  "homepage": "https://github.com/brodeynewman/terraform-ecs-kinesis#readme",
+  "dependencies": {
+    "async": "^3.2.0",
+    "aws-kcl": "^2.1.0",
+    "lodash": "^4.17.21"
+  }
+}

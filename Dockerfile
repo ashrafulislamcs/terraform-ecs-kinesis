@@ -1,9 +1,10 @@
-
+FROM anapsix/alpine-java
 FROM node:14.15.3-alpine3.10
 
 WORKDIR /usr/src/app
 
-COPY . .
+COPY ./src ./src
+COPY ./package*.json ./
 
 RUN npm i
 
