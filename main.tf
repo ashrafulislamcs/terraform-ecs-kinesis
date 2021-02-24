@@ -23,47 +23,25 @@ resource "aws_vpc" "main" {
   }
 }
 
-resource "aws_route_table" "gw" {
-  vpc_id = aws_vpc.main.id
+resource "aws_subnet" "public_az1" {
+  availability_zone       = "us-east-1a"
+  cidr_block              = "10.10.10.0/24"
+  map_public_ip_on_launch = true
+  vpc_id                  = aws_vpc.main.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.gw1.id
+  tags = {
+    Name = "Public subnet for us-east-1a"
   }
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.gw2.id
-  }
-}
-
-resource "aws_route_table_association" "az1" {
-  subnet_id      = aws_subnet.private_az1.id
-  route_table_id = aws_route_table.gw.id
-}
-
-resource "aws_route_table_association" "az2" {
-  subnet_id      = aws_subnet.private_az2.id
-  route_table_id = aws_route_table.gw.id
 }
 
 resource "aws_subnet" "private_az1" {
-  availability_zone       = "us-east-1a"
-  cidr_block              = "10.10.10.0/24"
-  vpc_id                  = aws_vpc.main.id
-
-  tags = {
-    Name = "Default subnet for us-east-1a"
-  }
-}
-
-resource "aws_subnet" "private_az2" {
   availability_zone       = "us-east-1b"
   cidr_block              = "10.10.20.0/24"
+  map_public_ip_on_launch = false
   vpc_id                  = aws_vpc.main.id
 
   tags = {
-    Name = "Default subnet for us-east-1b"
+    Name = "Private subnet for us-east-1a"
   }
 }
 
@@ -71,18 +49,45 @@ resource "aws_eip" "nat1" {
   vpc = true
 }
 
-resource "aws_eip" "nat2" {
-  vpc = true
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-resource "aws_nat_gateway" "gw1" {
+resource "aws_nat_gateway" "private" {
   allocation_id = aws_eip.nat1.id
-  subnet_id     = aws_subnet.private_az1.id
+  subnet_id     = aws_subnet.public_az1.id
 }
 
-resource "aws_nat_gateway" "gw2" {
-  allocation_id = aws_eip.nat2.id
-  subnet_id     = aws_subnet.private_az2.id
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.private.id
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
+}
+
+resource "aws_route_table_association" "private" {
+  subnet_id      = aws_subnet.private_az1.id
+  route_table_id = aws_route_table.private.id
+}
+
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public_az1.id
+  route_table_id = aws_route_table.public.id
 }
 
 module "ecr" {
@@ -144,7 +149,7 @@ resource "aws_ecs_cluster" "default" {
   name = module.label.id
 }
 
-resource "aws_security_group" "ecs_service" {
+resource "aws_security_group" "ecs" {
   name        = "ECS service sec group"
   description = "Private cluster security group"
   vpc_id      = aws_vpc.main.id
@@ -157,7 +162,7 @@ resource "aws_security_group" "ecs_service" {
   }
 
   tags = {
-    Name = "Private Egress Sec Group"
+    Name = "Private egress Sec Group"
   }
 }
 
@@ -171,14 +176,13 @@ resource "aws_ecs_service" "node" {
   launch_type                        = var.ecs_launch_type
 
   network_configuration {
-    assign_public_ip = true
-    subnets          = [aws_subnet.private_az1.id, aws_subnet.private_az2.id]
-    security_groups  = [aws_security_group.ecs_service.id]
+    subnets          = [aws_subnet.private_az1.id]
+    security_groups  = [aws_security_group.ecs.id]
   }
 }
 
-resource "aws_kinesis_stream" "test_stream" {
-  name             = "tf-kinesis-dev"
+resource "aws_kinesis_stream" "test" {
+  name             = "test"
   shard_count      = 3
   retention_period = 24
 
