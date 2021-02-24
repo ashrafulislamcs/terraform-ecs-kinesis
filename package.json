@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon ./src/index.js",
-    "start": "cd src/ && kcl-bootstrap --java /usr/bin/java -p ./run.properties -e"
+    "start": "cd src/ && kcl-bootstrap --java $(which java) -p ../kinesis.properties -e"
   },
   "type": "module",
   "repository": {
