@@ -22,4 +22,4 @@ RUN npm i -g aws-kcl
 
 EXPOSE 80
 
-CMD ["/bin/sh"]
+CMD ["npm", "start"]
