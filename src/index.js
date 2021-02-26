@@ -1,8 +1,18 @@
 import _ from 'lodash';
 import kcl from 'aws-kcl';
 import queue from 'async/queue.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const DEFAULT_CONCURRENCY_LIMIT = 500;
+
+const putItem = (item) => {
+  const myUser = new User({
+    id: uuidv4(),
+    meta: JSON.stringify(item),
+  });
+
+  return myUser.save();
+}
 
 class Client {
   constructor({ concurrencyLimit = DEFAULT_CONCURRENCY_LIMIT } = {}) {
@@ -22,10 +32,12 @@ class Client {
     }, this.limit);
   }
 
-  handleTask(task) {
+  async handleTask(task) {
     const { data, sequenceNumber, partitionKey, done } = task;
 
-    console.log('Here is the data...', data);
+    console.log('Saving data: ', data);
+
+    await putItem(data)
 
     done();
   }
