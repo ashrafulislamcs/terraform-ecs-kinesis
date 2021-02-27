@@ -96,6 +96,7 @@ module "ecr" {
   stage                  = module.label.stage
   name                   = module.label.name
   principals_full_access = [data.aws_iam_role.ecr.arn]
+  image_tag_mutability	 = "MUTABLE"
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
