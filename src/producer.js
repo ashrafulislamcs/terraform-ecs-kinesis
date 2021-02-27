@@ -11,7 +11,7 @@ const buildParams = (payload) => ({
   Data: JSON.stringify(payload),
 });
 
-const cannon = (count = 1000) => {
+const cannon = (count = 10000) => {
   for (let i = 0; i < count; i++) {
     kinesis.putRecord(buildParams({
       foo: 'bar',
