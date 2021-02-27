@@ -1,9 +1,20 @@
 import _ from 'lodash';
 import kcl from 'aws-kcl';
 import queue from 'async/queue.js';
+import { v4 as uuidv4 } from 'uuid';
+
+import Message from './message.js';
 
 const DEFAULT_CONCURRENCY_LIMIT = 500;
 
+const putItem = (item) => {
+  const message = new Message({
+    id: uuidv4(),
+    meta: JSON.stringify(item),
+  });
+
+  return message.save();
+}
 class Client {
   constructor({ concurrencyLimit = DEFAULT_CONCURRENCY_LIMIT } = {}) {
     this.limit = concurrencyLimit;
@@ -22,12 +33,22 @@ class Client {
     }, this.limit);
   }
 
-  handleTask(task) {
-    const { data, sequenceNumber, partitionKey, done } = task;
+  async handleTask(task) {
+    const { data, sequenceNumber, done, onCheckpoint } = task;
 
-    console.log('Here is the data...', data);
+    console.log('Saving data: ', data);
 
-    done();
+    await putItem(data);
+
+    onCheckpoint(sequenceNumber, (err) => {
+      if (err) {
+        console.log('An error occurred when checkpointing: ', err);
+      }
+
+      // In this example, regardless of error, we mark processRecords
+      // complete to proceed further with more records.
+      done();
+    });
   }
 
   push(item) {
@@ -46,8 +67,18 @@ class Client {
         self.init();
         done();
       },
-      shutdown() {
+      shutdown(shutdownInput, done) {
         console.log('Shutting down KCL consumer...');
+
+        shutdownInput.checkpointer.checkpoint((err) => {
+          if (err) {
+            console.log('An error occured when shutting down: ', err);
+          }
+
+          // In this example, regardless of error, we mark the shutdown operation
+          // complete.
+          done();
+        });
       },
       processRecords(processRecordsInput, done) {
         if (!processRecordsInput || !processRecordsInput.records) {
@@ -58,7 +89,7 @@ class Client {
         const { records } = processRecordsInput;
 
         _.each(records, (record) => {
-          const { sequenceNumber, partitionKey } = record;
+          const { sequenceNumber } = record;
 
           if (!sequenceNumber) {
             // Must call completeCallback to proceed further.
@@ -67,9 +98,9 @@ class Client {
 
           self.push({
             done,
-            partitionKey,
             sequenceNumber,
             data: Buffer(record.data, 'base64').toString(),
+            onCheckpoint: processRecordsInput.checkpointer.checkpoint,
           })
         });
       },

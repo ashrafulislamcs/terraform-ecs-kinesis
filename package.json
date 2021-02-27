@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon ./src/index.js",
-    "start": "cd src/ && kcl-bootstrap --java $(which java) -p ../kinesis.properties -e"
+    "start": "cd src/ && kcl-bootstrap --java $(which java) -p ../kinesis.properties -e",
+    "produce": "node ./src/producer.js"
   },
   "type": "module",
   "repository": {
@@ -23,6 +24,8 @@
     "async": "^3.2.0",
     "aws-kcl": "^2.1.0",
     "aws-sdk": "^2.848.0",
-    "lodash": "^4.17.21"
+    "dynamoose": "^2.7.0",
+    "lodash": "^4.17.21",
+    "uuid": "^8.3.2"
   }
 }
