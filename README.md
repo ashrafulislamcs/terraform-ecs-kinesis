@@ -41,3 +41,7 @@ Our consumer code is relatively simple. We are listening for messages, shoving t
 For every message we get, we insert an item into DynamoDB.
 
 Once the message is finished processing, we commit the sequence number which tells Kinesis to continue processing.
+
+## TODO
+
+- [] Use VPC endpoint to ensure access to our Kinesis stream only comes from within our private network.
