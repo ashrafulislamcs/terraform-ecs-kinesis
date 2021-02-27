@@ -18,7 +18,7 @@ variable deployment_maximum_percent {
 
 variable desired_count {
   type        = number
-  default     = 3
+  default     = 2
   description = "The number of instances that ECS will run"
 }
 

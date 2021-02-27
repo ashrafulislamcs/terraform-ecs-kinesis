@@ -228,7 +228,7 @@ resource "aws_ecs_service" "node" {
   task_definition                    = aws_ecs_task_definition.node.arn
   deployment_maximum_percent         = var.deployment_maximum_percent
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent 
-  desired_count                      = 2
+  desired_count                      = var.desired_count
   launch_type                        = var.ecs_launch_type
 
   network_configuration {
