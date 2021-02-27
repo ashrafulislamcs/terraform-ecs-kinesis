@@ -34,13 +34,21 @@ class Client {
   }
 
   async handleTask(task) {
-    const { data, sequenceNumber, partitionKey, done } = task;
+    const { data, sequenceNumber, done, onCheckpoint } = task;
 
     console.log('Saving data: ', data);
 
     await putItem(data);
 
-    done();
+    onCheckpoint(sequenceNumber, (err) => {
+      if (err) {
+        console.log('An error occurred when checkpointing: ', err);
+      }
+
+      // In this example, regardless of error, we mark processRecords
+      // complete to proceed further with more records.
+      done();
+    });
   }
 
   push(item) {
@@ -59,8 +67,18 @@ class Client {
         self.init();
         done();
       },
-      shutdown() {
+      shutdown(shutdownInput, done) {
         console.log('Shutting down KCL consumer...');
+
+        shutdownInput.checkpointer.checkpoint((err) => {
+          if (err) {
+            console.log('An error occured when shutting down: ', err);
+          }
+
+          // In this example, regardless of error, we mark the shutdown operation
+          // complete.
+          done();
+        });
       },
       processRecords(processRecordsInput, done) {
         if (!processRecordsInput || !processRecordsInput.records) {
@@ -71,7 +89,7 @@ class Client {
         const { records } = processRecordsInput;
 
         _.each(records, (record) => {
-          const { sequenceNumber, partitionKey } = record;
+          const { sequenceNumber } = record;
 
           if (!sequenceNumber) {
             // Must call completeCallback to proceed further.
@@ -80,9 +98,9 @@ class Client {
 
           self.push({
             done,
-            partitionKey,
             sequenceNumber,
             data: Buffer(record.data, 'base64').toString(),
+            onCheckpoint: processRecordsInput.checkpointer.checkpoint,
           })
         });
       },
