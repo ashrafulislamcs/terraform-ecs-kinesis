@@ -96,6 +96,7 @@ module "ecr" {
   stage                  = module.label.stage
   name                   = module.label.name
   principals_full_access = [data.aws_iam_role.ecr.arn]
+  image_tag_mutability	 = "MUTABLE"
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
@@ -227,7 +228,7 @@ resource "aws_ecs_service" "node" {
   task_definition                    = aws_ecs_task_definition.node.arn
   deployment_maximum_percent         = var.deployment_maximum_percent
   deployment_minimum_healthy_percent = var.deployment_minimum_healthy_percent 
-  desired_count                      = 2
+  desired_count                      = var.desired_count
   launch_type                        = var.ecs_launch_type
 
   network_configuration {

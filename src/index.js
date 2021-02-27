@@ -82,7 +82,7 @@ class Client {
       },
       processRecords(processRecordsInput, done) {
         if (!processRecordsInput || !processRecordsInput.records) {
-          // Must call completeCallback to proceed further.
+          // Must call done to proceed further.
           return done();
         }
     
@@ -102,6 +102,13 @@ class Client {
             data: Buffer(record.data, 'base64').toString(),
             onCheckpoint: processRecordsInput.checkpointer.checkpoint,
           })
+        });
+      },
+      shardEnded(shardEndedInput, done) {
+        console.log('Shard has ended: ', shardId);
+
+        shardEndedInput.checkpointer.checkpoint(() => {
+          done();
         });
       },
     }

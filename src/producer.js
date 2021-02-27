@@ -1,11 +1,12 @@
 import AWS from 'aws-sdk';
+import { v4 as uuidv4 } from 'uuid';
 
 const kinesis = new AWS.Kinesis({
   region: 'us-east-1'
 });
 
 const buildParams = (payload) => ({
-  PartitionKey: 'test',
+  PartitionKey: uuidv4(),
   StreamName: 'test',
   Data: JSON.stringify(payload),
 });
