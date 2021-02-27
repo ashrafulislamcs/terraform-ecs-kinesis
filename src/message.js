@@ -1,6 +1,12 @@
 import dynamoose from 'dynamoose';
 
-const message = dynamoose.model("message", {
+const sdk = dynamoose.aws.sdk;
+
+sdk.config.update({
+  region: 'us-east-1'
+});
+
+const message = dynamoose.model("messages", {
   "id": String,
   "meta": {
     "type": String,

@@ -3,17 +3,18 @@ import kcl from 'aws-kcl';
 import queue from 'async/queue.js';
 import { v4 as uuidv4 } from 'uuid';
 
+import Message from './message.js';
+
 const DEFAULT_CONCURRENCY_LIMIT = 500;
 
 const putItem = (item) => {
-  const myUser = new User({
+  const message = new Message({
     id: uuidv4(),
     meta: JSON.stringify(item),
   });
 
-  return myUser.save();
+  return message.save();
 }
-
 class Client {
   constructor({ concurrencyLimit = DEFAULT_CONCURRENCY_LIMIT } = {}) {
     this.limit = concurrencyLimit;
@@ -37,7 +38,7 @@ class Client {
 
     console.log('Saving data: ', data);
 
-    await putItem(data)
+    await putItem(data);
 
     done();
   }
